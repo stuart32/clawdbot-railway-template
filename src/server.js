@@ -1313,7 +1313,7 @@ app.post("/setup/import", requireSetupAuth, async (req, res) => {
 const proxy = httpProxy.createProxyServer({
   target: GATEWAY_TARGET,
   ws: true,
-  xfwd: true,
+  xfwd: false,
 });
 
 proxy.on("error", (err, _req, res) => {
@@ -1334,6 +1334,8 @@ proxy.on("error", (err, _req, res) => {
 function requireDashboardAuth(req, res, next) {
   if (req.path === "/healthz" || req.path === "/setup/healthz") return next();
   if (req.path.startsWith("/hooks")) return next(); // allow OpenClaw webhook endpoints to bypass dashboard auth
+  const authHeader = req.headers.authorization || "";
+  if (authHeader.toLowerCase().startsWith("bearer ")) return next();
   if (!SETUP_PASSWORD) return next(); // no password configured → open
   const header = req.headers.authorization || "";
   const [scheme, encoded] = header.split(" ");
@@ -1363,6 +1365,12 @@ function attachGatewayAuthHeader(req) {
 
 proxy.on("proxyReqWs", (_proxyReq, req) => {
   attachGatewayAuthHeader(req);
+});
+
+proxy.on("proxyReq", (proxyReq) => {
+  if (OPENCLAW_GATEWAY_TOKEN) {
+    proxyReq.setHeader("authorization", `Bearer ${OPENCLAW_GATEWAY_TOKEN}`);
+  }
 });
 
 app.use(requireDashboardAuth, async (req, res) => {
