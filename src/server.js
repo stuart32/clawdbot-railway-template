@@ -1367,9 +1367,16 @@ proxy.on("proxyReqWs", (_proxyReq, req) => {
   attachGatewayAuthHeader(req);
 });
 
-proxy.on("proxyReq", (proxyReq) => {
+proxy.on("proxyReq", (proxyReq, req) => {
   if (OPENCLAW_GATEWAY_TOKEN) {
     proxyReq.setHeader("authorization", `Bearer ${OPENCLAW_GATEWAY_TOKEN}`);
+  }
+  // express.json() consumes the body stream; re-stream it for the proxy
+  if (req.body && Object.keys(req.body).length > 0) {
+    const bodyData = JSON.stringify(req.body);
+    proxyReq.setHeader("Content-Type", "application/json");
+    proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
+    proxyReq.write(bodyData);
   }
 });
 
