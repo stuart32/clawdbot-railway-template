@@ -76,6 +76,9 @@ COPY --from=openclaw-build /openclaw /openclaw
 RUN printf '%s\n' '#!/usr/bin/env bash' 'exec node /openclaw/dist/entry.js "$@"' > /usr/local/bin/openclaw \
   && chmod +x /usr/local/bin/openclaw
 
+# Bump CACHEBUST in Railway Build Variables to force a clean rebuild of this layer.
+ARG CACHEBUST=1
+RUN echo "cachebust=${CACHEBUST}"
 COPY src ./src
 
 # The wrapper listens on $PORT.
