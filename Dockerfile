@@ -1,4 +1,6 @@
+# cache-bust: 2026-03-29-v4
 # Build openclaw from source to avoid npm packaging gaps (some dist files are not shipped).
+# cache-bust: 2026-03-29-v4
 FROM node:22-bookworm AS openclaw-build
 
 # Dependencies needed for openclaw build
