@@ -1334,6 +1334,13 @@ proxy.on("error", (err, _req, res) => {
 function requireDashboardAuth(req, res, next) {
   if (req.path === "/healthz" || req.path === "/setup/healthz") return next();
   if (req.path.startsWith("/hooks")) return next(); // allow OpenClaw webhook endpoints to bypass dashboard auth
+  
+  // Allow /v1/chat/completions with Bearer tokens (external API access)
+  if (req.path === "/v1/chat/completions") {
+    const authHeader = req.headers.authorization || "";
+    if (authHeader.toLowerCase().startsWith("bearer ")) return next();
+  }
+  
   const authHeader = req.headers.authorization || "";
   if (authHeader.toLowerCase().startsWith("bearer ")) return next();
   if (!SETUP_PASSWORD) return next(); // no password configured → open
